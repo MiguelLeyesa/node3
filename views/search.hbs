@@ -1,0 +1,136 @@
+<h3>Search movies</h3>
+<h6>movie name</h6>
+<input type="text" id="name" placeholder="movie"><br>
+<br>
+
+<h6>year</h6>
+<input type="number" id="year" placeholder="year"><br>
+<input type="checkbox" id="anyyear" checked> any year
+<br><br>
+
+<h6>genre</h6>
+<select id="genre">
+    <option value="Any">Any</option>
+    {{#each genres}}
+        <option value="{{this}}">{{this}}</option>
+    {{/each}}
+</select>
+<br>
+
+<br>
+<br>
+
+<input id="search" type="submit" value="Search">
+<br>
+<br>
+<h6 id="warning" style="color: red;"></h6>
+
+<br>
+<br>
+<table border="1px" width="100%" style="table-layout : fixed;">
+    <tr>
+        <th>#</th>
+        <th>id</th>
+        <th>Name</th>
+        <th>Year</th>
+        <th>Genre</th>
+        <th>Director firstname</th>
+        <th>Director lastname</th>
+    </tr>
+</table>
+<table id="results" border="1px" width="100%" style="table-layout : fixed;">
+</table>
+
+<br>
+<br>
+
+<script>
+    $("#year").attr('disabled', $('#anyyear').is(':checked'))
+    $('#anyyear').change(function() {
+        $("#year").attr('disabled', $(this).is(':checked'))
+    });
+
+    $("#search").click(function() {
+        $("#warning").html("");
+        $("#search").val("Searching...");
+        $("#results").html("");
+
+        name = $("#name").val();
+        year = $('#year').val();
+        genre = $('#genre').val();
+
+        if ($('#anyyear').is(':checked')) {
+            year = -1;
+        }
+
+        if (isInt(year)) {
+            year = parseInt(year, 10);
+            $.post("/search", {
+                name: name,
+                year: year,
+                genre: genre
+
+            }, function(data) {
+                if (data.error) {
+                    $("#warning").html("database error, try again later");
+                    $("#search").val("Search");
+                    return   
+                }
+
+                if (data.incomplete) {
+                    $("#warning").html("results may be incomplete");
+                }
+
+                result = data.result
+                length = 0;
+                if (data.result) {
+                    length = data.result.length
+                }
+                remaining = data.remaining
+
+                domResults = $("#results");
+                for (var x = 0; x < length; x++) {
+                    newRow = ""
+                    newRow += "<tbody><tr>"
+                    newRow += "<td>"
+                    newRow += x + 1
+                    newRow += "</td>"
+                    newRow += "<td>"
+                    newRow += result[x].id
+                    newRow += "</td>"
+                    newRow += "<td>"
+                    newRow += result[x].name
+                    newRow += "</td>"
+                    newRow += "<td>"
+                    newRow += result[x].year
+                    newRow += "</td>"
+                    newRow += "<td>"
+                    newRow += result[x].genre
+                    newRow += "</td>"
+                    newRow += "<td>"
+                    newRow += result[x].director_firstname
+                    newRow += "</td>"
+                    newRow += "<td>"
+                    newRow += result[x].director_lastname
+                    newRow += "</td>"
+                    newRow += "<\td><\tr><\tbody>"
+                    var newResults = domResults.html() + newRow
+                    domResults.html(newResults)
+                }
+                
+                if (length == 0) {
+                    $("#warning").html("no results found");
+                }
+
+                if (remaining) {
+                    $("#warning").html("only first 100 results displayed");
+                }
+                
+                $("#search").val("Search");
+            });
+        } else {
+            $("#warning").html("Invalid year!");
+            $("#search").html("Search");
+        }
+    });
+</script>

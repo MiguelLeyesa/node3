@@ -1,0 +1,153 @@
+<h3>Check for id availability</h3>
+<h6>movie id</h6>
+<input type="text" id="id" placeholder="id"><br>
+
+<br>
+<br>
+
+<input id="check" type="submit" value="Check">
+<br>
+<br>
+<h6 id="warning" style="color: red;"></h6>
+
+<br>
+<br>
+
+<h6 class="updateinput" hidden>id available, add details below</h6>
+<table class="updateinput" border="1px" width="70%" hidden>
+    <tr>
+        <th>field</th>
+        <th>Add data</th>
+    </tr>
+    <tr>
+        <td>id</td>
+        <td id="newid"></td>
+    </tr>
+    <tr>
+        <td>Name</td>
+        <td><input type="text" id="newname" style='width:100%;'></td>
+    </tr>
+    <tr>
+        <td>Year</td>
+        <td><input type="number" id="newyear" style='width:100%;'></td>
+    </tr>
+    <tr>
+        <td>Genre</td>
+        <td>
+            <select id="newgenre" style="width: 100%;">
+                {{#each genres}}
+                    <option value="{{this}}">{{this}}</option>
+                {{/each}}
+            </select>
+        </td>
+    </tr>
+    <tr>
+        <td>Director firstname</td>
+        <td><input type="text" id="newdirectorfirstname" style='width:100%;'></td>
+    </tr>
+    <tr>
+        <td>Director Lastname</td>
+        <td><input type="text" id="newdirectorlastname" style='width:100%;'></td>
+    </tr>
+    
+</table>
+<br>
+<br>
+<input id="add" class="updateinput" type="submit" value="Add" hidden>
+<br>
+<br>
+<h6 id="warning2" class="updateinput" style="color: red;" hidden></h6>
+
+<script>
+    $("#check").click(function() {
+        $("#warning").html("");
+        $("#warning2").html("");
+        $("#check").val("Checking...");
+
+        $(".updateinput").each(function() {
+            $(this).attr('hidden', true);
+        });
+
+        var id = $("#id").val();
+
+        if (isInt(id)) {
+            id = parseInt(id, 10);
+
+            $.post("/idlookup", {
+                id: id
+            }, function(data) {
+                if (data.error) {
+                    $("#warning").html("database error");
+                    $("#check").val("Check");
+                    return
+                }
+
+                if (!data.uncertain) {
+                    result = data.result
+                    if (result.length == 0) {
+                        $(".updateinput").each(function() {
+                            $(this).attr('hidden', false);
+                        })
+
+                        $("#newid").html(id)
+
+                        $("#check").val("Check");
+                    } else {
+                        $("#warning").html("id unavailable");
+                        $("#check").val("Check");
+                    }
+                }
+
+                if (data.uncertain) {
+                    $("#warning").html("id not found, may be caused by database error");
+                }
+            })                
+        } else {
+            $("#warning").html("Invalid id!");
+            $("#check").val("Check");
+        }
+    })
+
+    $("#add").click(function() {
+        $("#warning2").html("")
+        $("#add").val("Adding...")
+
+        var id = parseInt($("#newid").html(), 10)
+        var name = $("#newname").val()
+        var year = $("#newyear").val()
+        var genre = $("#newgenre").val()
+        var director_firstname = $("#newdirectorfirstname").val()
+        var director_lastname = $("#newdirectorlastname").val()
+
+        if (name.length == 0 ||
+            genre.length == 0 ||
+            director_firstname.length == 0 ||
+            director_lastname.length == 0) {
+            $("#warning2").html("Missing Fields!")
+            $("#update").val("Update")
+        } else {
+            if (isInt(year)) {
+                year = parseInt(year, 10);
+
+                $.post("/add", {
+                    id: id,
+                    name: name,
+                    year: year,
+                    genre: genre,
+                    director_firstname: director_firstname,
+                    director_lastname: director_lastname
+                }, function(data) {
+                    if (data.success) {
+                        $("#warning2").html("Successfully added!")
+                    } else {
+                        $("#warning2").html("Addition failed!")
+                    }
+                    $("#add").val("Add")
+                })
+            } else {
+                $("#warning2").html("Invalid year!")
+                $("#add").val("Add")
+            }
+        }
+    })
+</script>

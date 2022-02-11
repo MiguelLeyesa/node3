@@ -1,0 +1,56 @@
+<h3>Enter movie id to delete</h3>
+<h6>movie id</h6>
+<input type="text" id="id" placeholder="id"><br>
+
+<br>
+<br>
+
+<input id="delete" type="submit" value="Delete">
+<br>
+<br>
+<h6 id="warning" style="color: red;"></h6>
+
+<script>
+    $("#delete").click(function() {
+        $("#warning").html("");
+        $("#delete").val("Deleting...");
+
+        var id = $("#id").val();
+
+        if (isInt(id)) {
+            $.post("/idlookup", {
+                id: id
+            }, function(data) {
+                if (data.error) {
+                    $("#warning").html("database error");
+                    $("#delete").val("Delete");
+                    return
+                }
+
+                result = data.result
+                if (result.length == 1) {
+                    $.post("/delete", {
+                        id: id
+                    }, function(data) {
+                        if (data.success) {
+                            $("#warning").html("Successfully deleted!")
+                        } else {
+                            $("#warning").html("Deletion failed!")
+                        }
+                        $("#delete").val("Delete")
+                    })
+                } else {
+                    $("#warning").html("id not found");
+                    $("#delete").val("Delete");
+                }
+
+                if (data.uncertain) {
+                    $("#warning").html("id not found, may be caused by database error");
+                }
+            })
+        } else {
+            $("#warning").html("Invalid id!");
+            $("#delete").val("Delete");
+        }
+    })
+</script>

@@ -1,0 +1,206 @@
+<h3>Enter move id to update</h3>
+<h6>movie id</h6>
+<input type="text" id="id" placeholder="id"><br>
+
+<br>
+<br>
+
+<input id="search" type="submit" value="Search">
+<br>
+<br>
+<h6 id="warning" style="color: red;"></h6>
+
+<br>
+<br>
+
+<table border="1px" width="100%" style="table-layout : fixed;">
+     <tr>
+        <th>id</th>
+        <th>Name</th>
+        <th>Year</th>
+        <th>Genre</th>
+        <th>Director firstname</th>
+        <th>Director lastname</th>
+    </tr>
+</table>
+<table id="results" border="1px" width="100%" style="table-layout : fixed;">
+</table>
+
+<br>
+<br>
+
+<table class="updateinput" border="1px" width="70%" hidden>
+    <tr>
+        <th>field</th>
+        <th>Old data</th>
+        <th>Edit new data</th>
+    </tr>
+    <tr>
+        <td>id</td>
+        <td id="oldid"></td>
+        <td id="newid"></td>
+    </tr>
+    <tr>
+        <td>Name</td>
+        <td id="oldname"></td>
+        <td><input type="text" id="newname" style='width:100%;'></td>
+    </tr>
+    <tr>
+        <td>Year</td>
+        <td id="oldyear"></td>
+        <td><input type="number" id="newyear" style='width:100%;'></td>
+    </tr>
+    <tr>
+        <td>Genre</td>
+        <td id="oldgenre"></td>
+        <td>
+            <select id="newgenre" style="width: 100%;">
+                {{#each genres}}
+                    <option value="{{this}}">{{this}}</option>
+                {{/each}}
+            </select>
+        </td>
+    </tr>
+    <tr>
+        <td>Director firstname</td>
+        <td id="olddirectorfirstname"></td>
+        <td><input type="text" id="newdirectorfirstname" style='width:100%;'></td>
+    </tr>
+    <tr>
+        <td>Director Lastname</td>
+        <td id="olddirectorlastname"></td>
+        <td><input type="text" id="newdirectorlastname" style='width:100%;'></td>
+    </tr>
+    
+</table>
+<br>
+<br>
+<input id="update" class="updateinput" type="submit" value="Update" hidden>
+<br>
+<br>
+<h6 id="warning2" class="updateinput" style="color: red;" hidden></h6>
+<script>
+    $("#search").click(function() {
+        $("#warning").html("");
+        $("#warning2").html("");
+        $("#search").val("Searching...");
+        $("#results").html("");
+        $(".updateinput").each(function() {
+            $(this).attr('hidden', true);
+        });
+
+        var id = $("#id").val();
+
+        if (isInt(id)) {
+            id = parseInt(id, 10);
+            $.post("/idlookup", {
+                id: id
+            }, function(data) {
+                if (data.error) {
+                    $("#warning").html("database error");
+                    $("#search").val("Search");
+                    return
+                }
+
+                result = data.result
+                if (result.length == 1) {
+                    domResults = $("#results");
+                    var newRow = ""
+                    newRow += "<tbody><tr>"
+                    newRow += "<td>"
+                    newRow += result[0].id
+                    newRow += "</td>"
+                    newRow += "<td>"
+                    newRow += result[0].name
+                    newRow += "</td>"
+                    newRow += "<td>"
+                    newRow += result[0].year
+                    newRow += "</td>"
+                    newRow += "<td>"
+                    newRow += result[0].genre
+                    newRow += "</td>"
+                    newRow += "<td>"
+                    newRow += result[0].director_firstname
+                    newRow += "</td>"
+                    newRow += "<td>"
+                    newRow += result[0].director_lastname
+                    newRow += "</td>"
+                    newRow += "<\td><\tr><\tbody>"
+                    var newResults = domResults.html() + newRow
+                    domResults.html(newResults)
+
+                    $(".updateinput").each(function() {
+                        $(this).attr('hidden', false);
+                    });
+                    $("#oldid").html(result[0].id)
+                    $("#newid").html(result[0].id)
+                    $("#oldname").html(result[0].name)
+                    $("#newname").val(result[0].name)
+                    $("#oldyear").html(result[0].year)
+                    $("#newyear").val(result[0].year)
+                    $("#oldgenre").html(result[0].genre)
+                    $("#newgenre").val(result[0].genre)
+                    $("#olddirectorfirstname").html(result[0].director_firstname)
+                    $("#newdirectorfirstname").val(result[0].director_firstname)
+                    $("#olddirectorlastname").html(result[0].director_lastname)
+                    $("#newdirectorlastname").val(result[0].director_lastname)
+
+                } else {
+                    $("#warning").html("entry not found");
+                }
+
+                if (data.uncertain) {
+                    $("#warning").html("id not found, may be caused by database error");
+                }
+
+                $("#search").val("Search");
+            });
+
+        } else {
+            $("#warning").html("Invalid id!");
+            $("#search").val("Search");
+        }
+    });
+
+    $("#update").click(function() {
+        $("#warning2").html("")
+        $("#update").val("Updating...")
+        
+        var id = parseInt($("#oldid").html(), 10)
+        var name = $("#newname").val()
+        var year = $("#newyear").val()
+        var genre = $("#newgenre").val()
+        var director_firstname = $("#newdirectorfirstname").val()
+        var director_lastname = $("#newdirectorlastname").val()
+
+        if (name.length == 0 ||
+            genre.length == 0 ||
+            director_firstname.length == 0 ||
+            director_lastname.length == 0) {
+            $("#warning2").html("Missing Fields!")
+            $("#update").val("Update")
+        } else {
+            if (isInt(year)) {
+                year = parseInt(year, 10);
+                $.post("/update", {
+                    id: id,
+                    name: name,
+                    year: year,
+                    genre: genre,
+                    director_firstname: director_firstname,
+                    director_lastname: director_lastname
+                }, function(data) {
+                    if (data.success) {
+                        $("#warning2").html("Successfully updated!")
+                    } else {
+                        $("#warning2").html("Update failed!")
+                    }
+                    $("#update").val("Update")
+                })
+            } else {
+                $("#warning2").html("Invalid year!")
+                $("#update").val("Update")
+            }
+        }
+    })
+</script>
