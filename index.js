@@ -95,3 +95,19 @@ app.post("/search", posts.search)
 app.post("/add", posts.add)
 app.post("/update", posts.update)
 app.post("/delete", posts.delete)
+
+app.get('/getdb', function(req, res) {
+    res.send(details)
+})
+
+app.get('/updateDetails', function(req, res) {
+    hostname1 = req.query.hostname1
+    hostname2 = req.query.hostname2
+    hostname3 = req.query.hostname3
+
+    details.node1.host = hostname1
+    details.node2.host = hostname2
+    details.node3.host = hostname3
+
+    res.send()
+})

@@ -53,7 +53,7 @@ function handleDisconnectNode1() {
             console.log(gettime() + 'error when connecting to node1, trying again in 5secs...');
             setTimeout(handleDisconnectNode1, 5000);    
         } else {
-            console.log(gettime() + 'connected to node1');
+            console.log(gettime() + 'connected to node1 with hostname ' + details.node1.host);
         }                                          
     });                                            
                                                
@@ -75,7 +75,7 @@ function handleDisconnectNode2() {
             console.log(gettime() + 'error when connecting to node2, trying again in 5secs...');
             setTimeout(handleDisconnectNode2, 5000);    
         } else {
-            console.log(gettime() + 'connected to node2');
+            console.log(gettime() + 'connected to node2 with hostname ' + details.node2.host);
         }                                          
     });                                            
                                                
@@ -97,7 +97,7 @@ function handleDisconnectNode3() {
             console.log(gettime() + 'error when connecting to node3, trying again in 5secs...');
             setTimeout(handleDisconnectNode3, 5000);    
         } else {
-            console.log(gettime() + 'connected to node3');
+            console.log(gettime() + 'connected to node3 with hostname ' + details.node3.host);
         }                                          
     });                                            
                                                
