@@ -315,24 +315,8 @@ let query = {
             })
         })
     },
-    update: (details) => {
-        return new Promise((resolve, reject) => {
-            console.log(details)
-            var id = details.id
-            var name = details.name
-            var year = details.year
-            var genre = details.genre
-            var director_firstname = details.director_firstname
-            var director_lastname = details.director_lastname
-
-            let qUpdate = `UPDATE ${tablename} SET name=\"${name}\", year=${year}, genre=\"${genre}\", director_firstname=\"${director_firstname}\", director_lastname=\"${director_lastname}\" WHERE id=${id};`
-            let qDelete = `DELETE FROM ${tablename} WHERE id=${id};`
-            let qInsert = `INSERT INTO ${tablename} VALUES (${id}, \"${name}\", ${year}, \"${genre}\", \"${director_firstname}\", \"${director_lastname}\");`
-            
-            var oldyear = details.oldyear
-            console.log(qUpdate)
-            console.log(qDelete)
-            console.log(qInsert)
+    update: (qUpdate, qDelete, qInsert, oldyear, year) => {
+        return new Promise((resolve, reject) => {            
             node1.query(qUpdate, (err, result) => {
                 if (err) {
                     addToQueue(1, qUpdate)
@@ -416,7 +400,7 @@ let query = {
             })
         })
     },
-    delete: (q) => {
+    delete: (q, year) => {
         return new Promise((resolve, reject) => {
             node1.query(q, (err1, result) => {
                 if (err1) {
@@ -425,25 +409,31 @@ let query = {
                     addToHistory(1, q)
                 }
 
-                node2.query(q, (err2, result) => {
-                    if (err2) {
-                        addToQueue(2, q)
-                    } else {
-                        addToHistory(2, q)
-                    }
-
-                    node3.query(q, (err3, result) => {
-                        if (err3) {
-                            addToQueue(3, q)
+                if (year < 1980) {
+                    node2.query(q, (err2, result) => {
+                        if (err2) {
+                            addToQueue(2, q)
                         } else {
-                            addToHistory(3, q)
+                            addToHistory(2, q)
                         }
 
                         resolve({
                             success: true
                         })
                     })
-                })
+                } else if (year >= 1980) {
+                    node3.query(q, (err3, result) => {
+                        if (err3) {
+                            addToQueue(3, q)
+                        } else {
+                            addToHistory(3, q)
+                        }
+    
+                        resolve({
+                            success: true
+                        })
+                    })   
+                }
             })
         })
     }
@@ -459,11 +449,11 @@ let queryasync = {
     add: async (q, year) => {
         return await query.add(q, year)
     },
-    update: async (q, year) => {
-        return await query.update(q, year)
+    update: async (qUpdate, qDelete, qInsert, oldyear, year) => {
+        return await query.update(qUpdate, qDelete, qInsert, oldyear, year)
     },
-    delete: async (q) => {
-        return await query.update(q, year)
+    delete: async (q, year) => {
+        return await query.delete(q, year)
     },
 }
 
