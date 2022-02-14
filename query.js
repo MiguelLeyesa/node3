@@ -4,6 +4,7 @@ const mysql = require('mysql')
 
 const addToQueue = require('./addToQueue.js')
 const addToHistory = require('./addToHistory.js');
+const e = require('express');
 
 details = {
     node1: {
@@ -314,34 +315,104 @@ let query = {
             })
         })
     },
-    update: (q, year) => {
+    update: (details) => {
         return new Promise((resolve, reject) => {
-            node1.query(q, (err1, result) => {
-                if (err1) {
-                    addToQueue(1, q)
+            console.log(details)
+            var id = details.id
+            var name = details.name
+            var year = details.year
+            var genre = details.genre
+            var director_firstname = details.director_firstname
+            var director_lastname = details.director_lastname
+
+            let qUpdate = `UPDATE ${tablename} SET name=\"${name}\", year=${year}, genre=\"${genre}\", director_firstname=\"${director_firstname}\", director_lastname=\"${director_lastname}\" WHERE id=${id};`
+            let qDelete = `DELETE FROM ${tablename} WHERE id=${id};`
+            let qInsert = `INSERT INTO ${tablename} VALUES (${id}, \"${name}\", ${year}, \"${genre}\", \"${director_firstname}\", \"${director_lastname}\");`
+            
+            var oldyear = details.oldyear
+            console.log(qUpdate)
+            console.log(qDelete)
+            console.log(qInsert)
+            node1.query(qUpdate, (err, result) => {
+                if (err) {
+                    addToQueue(1, qUpdate)
                 } else {
-                    addToHistory(1, q)
+                    addToHistory(1, qUpdate)
                 }
 
-                node2.query(q, (err2, result) => {
-                    if (err2) {
-                        addToQueue(2, q)
-                    } else {
-                        addToHistory(2, q)
-                    }
-
-                    node3.query(q, (err3, result) => {
-                        if (err3) {
-                            addToQueue(3, q)
+                if (oldyear < 1980 && year < 1980) {
+                    // update node 2
+                    node2.query(qUpdate, (err, result) => {
+                        if (err) {
+                            addToQueue(2, qUpdate)
                         } else {
-                            addToHistory(3, q)
+                            addToHistory(2, qUpdate)
                         }
-    
+
                         resolve({
                             success: true
                         })
+                    });
+                    
+                } else if (oldyear >= 1980 && year >= 1980) {
+                    // update node 3
+                    node3.query(qUpdate, (err, result) => {
+                        if (err) {
+                            addToQueue(3, qUpdate)
+                        } else {
+                            addToHistory(3, qUpdate)
+                        }
+
+                        resolve({
+                            success: true
+                        })
+                    });
+                    
+                } else if (oldyear < 1980 && year >= 1980) {
+                    //delete node 2
+                    node2.query(qDelete, (err, result) => {
+                        if (err) {
+                            addToQueue(2, qDelete)
+                        } else {
+                            addToHistory(2, qDelete)
+                        }
+
+                        //insert node 3
+                        node3.query(qInsert, (err, result) => {
+                            if (err) {
+                                addToQueue(3, qInsert)
+                            } else {
+                                addToHistory(3, qInsert)
+                            }
+
+                            resolve({
+                                success: true
+                            })
+                        })
+                    })                    
+                } else if (oldyear >= 1980 && year < 1980) {
+                    //delete node 3
+                    node3.query(qDelete, (err, result) => {
+                        if (err) {
+                            addToQueue(3, qDelete)
+                        } else {
+                            addToHistory(3, qDelete)
+                        }
+                        
+                        //insert node 2
+                        node2.query(qInsert, (err, result) => {
+                            if (err) {
+                                addToQueue(2, qInsert)
+                            } else {
+                                addToHistory(2, qInsert)
+                            }
+
+                            resolve({
+                                success: true
+                            })
+                        })
                     })
-                })
+                }
             })
         })
     },
